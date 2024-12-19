@@ -176,7 +176,7 @@
                 }
             });
             // Randomly hide two incorrect answers
-            incorrectAnswers
+            incorrectAnswersS
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 2)
                 .forEach((btn) => (btn.style.visibility = "hidden"));
