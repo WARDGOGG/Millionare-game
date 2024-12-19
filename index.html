@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Wants to Be a Millionaire</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #28313b, #485461);
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 3rem;
+            color: #ffcc00;
+            animation: glow 2s infinite alternate;
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffcc00;
+            }
+            to {
+                text-shadow: 0 0 20px #ffff33, 0 0 30px #ffff33;
+            }
+        }
+        #game-container {
+            margin: 20px auto;
+            padding: 20px;
+            background: #333;
+            border-radius: 15px;
+            max-width: 80%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        #game-container:hover {
+            transform: scale(1.03);
+        }
+        #question {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .answer {
+            background-color: #444;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .answer:hover {
+            background-color: #555;
+            transform: scale(1.05);
+        }
+        .lifeline-container {
+            margin-top: 20px;
+        }
+        .lifeline {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 1rem;
+            background: #444;
+            color: #ffc107;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .lifeline:hover {
+            transform: scale(1.1);
+            background-color: #555;
+        }
+        #hint {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 1.2rem;
+            color: #ffcc00;
+        }
+        .money {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            font-size: 2rem;
+            color: #ffcc00;
+            animation: fall 3s infinite linear;
+        }
+        @keyframes fall {
+            0% { top: -50px; }
+            100% { top: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Who Wants to Be a Millionaire</h1>
+    <div id="game-container">
+        <div id="question"></div>
+        <div id="answers"></div>
+        <div class="lifeline-container">
+            <button class="lifeline" onclick="use50_50()">خيار ٥٠/٥٠</button>
+            <button class="lifeline" onclick="askAudience()">اسأل الجمهور</button>
+            <button class="lifeline" onclick="askTeacher()">اسأل المعلم</button>
+        </div>
+        <div id="hint" style="display: none;"></div>
+    </div>
+
+    <script>
+        const questions = [
+            { question: "What is the past tense of 'go'?", answers: ["Went", "Gone", "Goed", "Goes"], correct: 0 },
+            { question: "What is the past tense of 'eat'?", answers: ["Eaten", "Eats", "Ate", "Eatened"], correct: 2 },
+            { question: "What is the past tense of 'run'?", answers: ["Ran", "Runned", "Runed", "Runs"], correct: 0 },
+            { question: "What is the past tense of 'write'?", answers: ["Written", "Wrote", "Writed", "Writes"], correct: 1 },
+            { question: "What is the past tense of 'speak'?", answers: ["Spoken", "Spoke", "Speaked", "Speaked"], correct: 1 },
+            { question: "What is the past tense of 'buy'?", answers: ["Buyed", "Bought", "Buyed", "Brought"], correct: 1 },
+            { question: "What is the past tense of 'see'?", answers: ["Saw", "Seen", "See", "Seened"], correct: 0 },
+            { question: "What is the past tense of 'take'?", answers: ["Taked", "Took", "Taken", "Takeen"], correct: 1 },
+            { question: "What is the past tense of 'do'?", answers: ["Did", "Done", "Doed", "Does"], correct: 0 },
+            { question: "What is the past tense of 'swim'?", answers: ["Swam", "Swimmed", "Swim", "Swamned"], correct: 0 },
+            { question: "What is the past tense of 'sing'?", answers: ["Sung", "Singed", "Sang", "Singed"], correct: 2 },
+            { question: "What is the past tense of 'begin'?", answers: ["Begined", "Began", "Beganed", "Begun"], correct: 1 },
+            { question: "What is the past tense of 'think'?", answers: ["Thinks", "Thought", "Thunk", "Thinked"], correct: 1 },
+            { question: "What is the past tense of 'catch'?", answers: ["Catched", "Caught", "Cought", "Catched"], correct: 1 },
+            { question: "What is the past tense of 'bring'?", answers: ["Brought", "Brang", "Branged", "Broughted"], correct: 0 }
+        ];
+
+        let currentQuestionIndex = 0;
+        const hint = document.getElementById("hint");
+
+        function loadQuestion(index) {
+            const question = questions[index];
+            document.getElementById("question").innerText = question.question;
+            const answers = document.getElementById("answers");
+            answers.innerHTML = "";
+            question.answers.forEach((answer, i) => {
+                const button = document.createElement("button");
+                button.className = "answer";
+                button.innerText = answer;
+                button.onclick = () => checkAnswer(i === question.correct);
+                answers.appendChild(button);
+            });
+            hint.style.display = "none";
+        }
+
+        function checkAnswer(isCorrect) {
+            document.querySelectorAll(".answer").forEach((btn) => (btn.disabled = true));
+            if (isCorrect) {
+                hint.innerText = "Correct!";
+                hint.style.display = "block";
+                setTimeout(() => {
+                    loadQuestion(++currentQuestionIndex % questions.length);
+                }, 2000);
+            } else {
+                hint.innerText = "Wrong! Restarting...";
+                hint.style.display = "block";
+                setTimeout(() => {
+                    currentQuestionIndex = 0;
+                    loadQuestion(currentQuestionIndex);
+                }, 2000);
+            }
+        }
+
+        function use50_50() {
+            const question = questions[currentQuestionIndex];
+            const answers = document.querySelectorAll(".answer");
+            let incorrectAnswers = [];
+            answers.forEach((btn, i) => {
+                if (i !== question.correct) {
+                    incorrectAnswers.push(btn);
+                }
+            });
+            // Randomly hide two incorrect answers
+            incorrectAnswers
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 2)
+                .forEach((btn) => (btn.style.visibility = "hidden"));
+        }
+
+        function askAudience() {
+            hint.innerText = "الجمهور يوصي بالإجابة الصحيحة.";
+            hint.style.display = "block";
+        }
+
+        function askTeacher() {
+            hint.innerText = "المعلم يقترح التحقق من الإجابة الصحيحة بعناية.";
+            hint.style.display = "block";
+        }
+
+        loadQuestion(0);
+
+        // Create falling money
+        function createMoney() {
+            const money = document.createElement("div");
+            money.classList.add("money");
+            money.style.left = `${Math.random() * 100}%`;
+            document.body.appendChild(money);
+            setTimeout(() => {
+                money.remove();
+            }, 3000);
+        }
+
+        setInterval(createMoney, 500); // Create money every 0.5 seconds
+    </script>
+</body>
+</html>
